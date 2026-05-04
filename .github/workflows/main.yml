@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -12,7 +12,7 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential zip curl libstdc++6 git wget python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev flex bison
+          sudo apt-get install -y bc build-essential zip curl libstdc++6 git wget python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev flex bison libncurses-dev
 
       - name: Download Toolchain & Source
         run: |
@@ -22,13 +22,8 @@ jobs:
       - name: Build Kernel
         run: |
           export PATH=$(pwd)/clang/bin:$PATH
+          export LD_LIBRARY_PATH=$(pwd)/clang/lib:$LD_LIBRARY_PATH
           cd kernel-source
           make O=out ARCH=arm64 vendor/vayu_user_defconfig
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-
-      - name: Upload Kernel
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel-PocoX3Pro-Vayu
-          path: kernel-source/out/arch/arm64/boot/Image.gz-dtb
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1
           
