@@ -12,7 +12,7 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential zip curl libstdc++6 git wget python3 gcc-aarch64-linux-gnu
+          sudo apt-get install -y bc build-essential zip curl libstdc++6 git wget python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev flex bison
 
       - name: Download Toolchain & Source
         run: |
@@ -23,7 +23,7 @@ jobs:
         run: |
           export PATH=$(pwd)/clang/bin:$PATH
           cd kernel-source
-          make O=out ARCH=arm64 vayu_user_defconfig
+          make O=out ARCH=arm64 vendor/vayu_user_defconfig
           make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
       - name: Upload Kernel
