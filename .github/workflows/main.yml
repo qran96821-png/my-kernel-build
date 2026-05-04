@@ -7,39 +7,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential zip curl libstdc++6 git wget python3
+          sudo apt-get install -y bc build-essential zip curl libstdc++6 git wget python3 gcc-aarch64-linux-gnu
 
       - name: Download Toolchain & Source
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
           git clone --depth=1 https://github.com/LineageOS/android_kernel_xiaomi_vayu kernel-source
 
-      - name: Inject Extreme Performance Tweaks
-        run: |
-          cd kernel-source
-          # تفعيل BBRv2 وتوسيع الـ TCP Buffers للإنترنت
-          sed -i 's/CONFIG_TCP_CONG_WESTWOOD=y/CONFIG_TCP_CONG_BBR=y/g' arch/arm64/configs/vayu_user_defconfig
-          # رفع حساسية اللمس والـ I/O
-          echo "CONFIG_HZ_1000=y" >> arch/arm64/configs/vayu_user_defconfig
-          # حل مشكلة تداخل الصوت
-          echo "CONFIG_SND_SOC_WCD934X_DSD=n" >> arch/arm64/configs/vayu_user_defconfig
-
       - name: Build Kernel
         run: |
           export PATH=$(pwd)/clang/bin:$PATH
           cd kernel-source
           make O=out ARCH=arm64 vayu_user_defconfig
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- \
-          NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
-      - name: Upload Finished Kernel
-        uses: actions/upload-artifact@v3
+      - name: Upload Kernel
+        uses: actions/upload-artifact@v4
         with:
-          name: PocoX3Pro-Extreme-Kernel
+          name: Kernel-PocoX3Pro-Vayu
           path: kernel-source/out/arch/arm64/boot/Image.gz-dtb
           
